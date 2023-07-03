@@ -12,6 +12,7 @@ import java.util.List;
 public class CharacterController {
 
     private static List<Character> characters = new ArrayList<>();
+    private static List<Integer> idList = new ArrayList<>();
 
     static {
         characters.add(new Character(1, "Magicien 1", "magicien", 100));
@@ -49,10 +50,11 @@ public class CharacterController {
 
         String name = characterForm.getName();
         String type = characterForm.getType();
+        int id = idList.size() > 0 ? idList.get(0) : characters.size()+1;
 
         if(name != null && name.length()>0 //
                 && type != null && type.length()>0) {
-            Character newCharacter = new Character(characters.size()+1,name,type,150);
+            Character newCharacter = new Character(id,name,type,150);
             characters.add(newCharacter);
 
             return new ResponseEntity<>(newCharacter,HttpStatus.OK);
@@ -92,6 +94,7 @@ public class CharacterController {
         String characterName = characterObj.getName();
 
         characters.removeIf(character -> character.getId() == id);
+        idList.add(characterObj.getId());
 
         return new ResponseEntity<>(String.format("Well done, character name: %s was deleted",characterName), HttpStatus.OK);
     }
