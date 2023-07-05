@@ -1,4 +1,4 @@
-package app.module;
+package app.module.models;
 
 public class CharacterForm {
     private String name;

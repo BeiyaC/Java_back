@@ -1,4 +1,7 @@
-package app.module;
+package app.module.controllers;
+import app.module.models.Character;
+import app.module.models.CharacterForm;
+import app.module.repositories.CharacterDAO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -11,36 +14,22 @@ import java.util.List;
 @RequestMapping("/characters")
 public class CharacterController {
 
-    private static List<Character> characters = new ArrayList<>();
     private static List<Integer> idList = new ArrayList<>();
 
-    static {
-        characters.add(new Character(1, "Magicien 1", "magicien", 100));
-        characters.add(new Character(2, "Guerrier 1", "guerrier", 150));
-        characters.add(new Character(3, "Magicien 2", "magicien", 80));
-        characters.add(new Character(4, "Guerrier 2", "guerrier", 120));
-    }
-
+    private CharacterDAO characterDAO = new CharacterDAO();
 
     @GetMapping
     public List<Character> getCharacters(Model model) {
 
-        model.addAttribute("charactersList", characters);
+        model.addAttribute("charactersList", characterDAO.findAll());
 
 
-        return characters;
+        return characterDAO.findAll();
     }
 
     @GetMapping("/{id}")
     public Character getCharacter(@PathVariable("id") int id) {
-
-        Character characterObj = characters.stream()
-                .filter(e -> e.getId() == id)
-                .findFirst()
-                .orElse(null);
-
-
-        return characterObj;
+        return characterDAO.findById(id);
     }
 
 
@@ -50,12 +39,15 @@ public class CharacterController {
 
         String name = characterForm.getName();
         String type = characterForm.getType();
-        int id = idList.size() > 0 ? idList.get(0) : characters.size()+1;
+        int id = idList.size() > 0 ? idList.get(0) : characterDAO.findAll().size()+1;
 
         if(name != null && name.length()>0 //
                 && type != null && type.length()>0) {
             Character newCharacter = new Character(id,name,type,150);
-            characters.add(newCharacter);
+            characterDAO.save(newCharacter);
+            if (idList.size() > 0){
+                idList.remove(0);
+            }
 
             return new ResponseEntity<>(newCharacter,HttpStatus.OK);
 
@@ -71,7 +63,7 @@ public class CharacterController {
         String name = characterForm.getName();
         String type = characterForm.getType();
 
-        for (Character character : characters) {
+        for (Character character : characterDAO.findAll()) {
             if (character.getId() == id) {
                 character.setName(name);
                 character.setType(type);
@@ -86,15 +78,10 @@ public class CharacterController {
     @ResponseBody
     public ResponseEntity deleteCharacter(@PathVariable("id") int id) {
 
-        Character characterObj = characters.stream()
-                .filter(e -> e.getId() == id)
-                .findFirst()
-                .orElse(null);
-
-        String characterName = characterObj.getName();
-
-        characters.removeIf(character -> character.getId() == id);
-        idList.add(characterObj.getId());
+        String characterName = characterDAO.findById(id).getName();
+        int characterId = characterDAO.findById(id).getId();
+        characterDAO.delete(id);
+        idList.add(characterId);
 
         return new ResponseEntity<>(String.format("Well done, character name: %s was deleted",characterName), HttpStatus.OK);
     }
